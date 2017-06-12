@@ -1,6 +1,6 @@
 {
   "name": "waker-migrator",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Couchbase doc migrator",
   "main": "main.js",
   "scripts": {
