@@ -9,7 +9,8 @@ const chalk       = require('chalk')
 module.exports = (options) => {
 
   const defaults = {
-    size: 10,
+    size: 20,
+    delay: 2000,
     query() {
       const body = bodyBuilder()
         .query('match_all')
@@ -97,7 +98,7 @@ module.exports = (options) => {
           }
           const keys = _.map(results.hits.hits, '_id')
           return migrator(keys, privates.db)
-            .then( () => {
+            .delay(defaults.delay).then( () => {
               return wm.update(type, query, migrator, page + 1)
             })
         })
