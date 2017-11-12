@@ -14,6 +14,7 @@ module.exports = (options) => {
     query() {
       const body = bodyBuilder()
         .query('match_all')
+        .sort('doc.docKey')
       return body.build()
     }
   }
@@ -75,15 +76,17 @@ module.exports = (options) => {
   }
 
   const wm = {
-    update (type, query, migrator, page = 0) {
+    update (type, query, migrator, from = null, size = null, page = 0) {
       const isValid = privates.validateOptions(options)
       if(!isValid) return promise.resolve(new Error('options is not valid'))
       if(privates.db == null)
         privates.db = new require('puffer') ({ host: options.couchbase.host, name: options.couchbase.bucket })
       body = defaults.query()
-      if(query != null) body.query = query
-      body.from = (page * defaults.size)
-      body.size = defaults.size
+      if(query != null) body = query
+      if(from == null) body.from = (page * defaults.size)
+      else body.from = from
+      if(size == null) body.size = defaults.size
+      else body.size = size
       return privates.search(type, { body })
         .then( (results) => {
           if(results instanceof Error) return Error
@@ -99,7 +102,7 @@ module.exports = (options) => {
           const keys = _.map(results.hits.hits, '_id')
           return migrator(keys, privates.db)
             .delay(defaults.delay).then( () => {
-              return wm.update(type, query, migrator, page + 1)
+              return wm.update(type, query, migrator, from, size, page + 1)
             })
         })
     },
