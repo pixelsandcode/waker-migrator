@@ -81,19 +81,21 @@ module.exports = (options) => {
       if(!isValid) return promise.resolve(new Error('options is not valid'))
       if(privates.db == null)
         privates.db = new require('puffer') ({ host: options.couchbase.host, name: options.couchbase.bucket })
-      body = defaults.query()
+
+      let body = defaults.query()
       if(query != null) body = query
-      if(from == null) body.from = (page * defaults.size)
+
+      if(size == null) size = defaults.size
+
+      if(from == null) body.from = (page * size)
       else body.from = from
-      if(size == null) body.size = defaults.size
-      else body.size = size
+
+      body.size = size
+
       return privates.search(type, { body })
         .then( (results) => {
           if(results instanceof Error) return Error
           if(results.hits.hits.length == 0) {
-            _.each(wm.results, (result, key) => {
-              console.log(privates.getChalk(result)(`${key}: ${result}`))
-            })
             console.log(wm.stats)
             privates.db.bucket.disconnect()
             privates.db = null
@@ -121,7 +123,8 @@ module.exports = (options) => {
     results: {},
     addStat (key, status) {
       wm.stats[status]++
-      wm.results[key] = status
+      // wm.results[key] = status
+      console.log(privates.getChalk(status)(`${key}: ${status}`))
       return true
     },
     addProperty (type, query, propertyName, defaultValue) {
